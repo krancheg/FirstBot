@@ -1,0 +1,17 @@
+server:
+  port: 8085
+
+spring:
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: userok
+    password: pass@1234
+
+  datasource:
+    driverClassName: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/first_bot
+    username: postgres
+    password: a123456789
+  jpa:
+    generate-ddl: true
