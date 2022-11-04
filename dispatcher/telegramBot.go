@@ -87,13 +87,31 @@ func waitMessageFromRabbit(botUrl string, session *amqp.Session) {
 			return
 		}
 		if data != nil {
-			err = respond(botUrl, data)
+			var method string
+			jsonStr := string(data)
+			if strings.Contains(jsonStr, "photo") {
+				method = "/sendPhoto"
+				data = correctChatId(jsonStr)
+			} else if strings.Contains(jsonStr, "document") {
+				method = "/sendDocument"
+				data = correctChatId(jsonStr)
+			} else if strings.Contains(jsonStr, "text") {
+				method = "/sendMessage"
+			} else {
+				return
+			}
+			err = respond(botUrl, data, method)
 			if err != nil {
 				log.Println("Respond error: ", err)
 				return
 			}
 		}
 	}
+}
+
+func correctChatId(jsonStr string) []byte {
+	jsonStr = strings.Replace(jsonStr, "chatId", "chat_id", 1)
+	return []byte(jsonStr)
 }
 
 func getUpdates(botUrl string, offset int) ([]Update, error) {
@@ -126,15 +144,15 @@ func respondBotMessage(botUrl string, botMessage BotMessage) (error) {
 	if err != nil {
 		return err
 	}
-	err = respond(botUrl, buf)
+	err = respond(botUrl, buf, "/sendMessage")
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func respond(botUrl string, buf []byte) (error) {
-	_, err := http.Post(botUrl+"/sendMessage","application/json", bytes.NewBuffer(buf))
+func respond(botUrl string, buf []byte, method string) (error) {
+	_, err := http.Post(botUrl+method, "application/json", bytes.NewBuffer(buf))
 	if err != nil {
 		return err
 	}

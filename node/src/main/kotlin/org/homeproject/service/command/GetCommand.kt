@@ -1,11 +1,11 @@
 package org.homeproject.service.command
 
+import org.homeproject.entity.RawEntity
 import org.homeproject.model.ContentType
 import org.homeproject.service.AnswerService
 import org.homeproject.service.DbService
 import org.springframework.stereotype.Component
 import org.telegram.telegrambots.meta.api.objects.Update
-import java.util.*
 import java.util.regex.Pattern
 
 @Component
@@ -19,20 +19,26 @@ class GetCommand(
 
         if (matcher.find()) {
             val id = matcher.group("num")
-            val resultUpdate = dbService.getByCode(id.toLong())
-            if (Objects.isNull(resultUpdate)) {
+            val resultUpdate: RawEntity
+            try {
+                resultUpdate = dbService.getByCode(id.toLong())
+            } catch (e: Exception) {
                 answerService.sendAnswerTextToChat(update, "Неверный код медиафайла $id")
                 return
             }
             if (ContentType.DOCUMENT.nameOfType == resultUpdate.contentType) {
-                answerService.sendAnswerTextToChat(update, "Документ: ${resultUpdate.event?.message?.document?.fileId}")
+                resultUpdate.event?.message?.document?.fileId
+                    ?.let { f -> answerService.sendAnswerDocumentToChat(update, f) }
+                    ?: run { answerService.sendAnswerTextToChat(update, "Документ недоступен.") }
             } else if (ContentType.PHOTO.nameOfType == resultUpdate.contentType) {
-                answerService.sendAnswerTextToChat(update, "Фото: ${resultUpdate.event?.message?.photo?.size}")
+                resultUpdate.event?.message?.photo?.get(0)?.fileId
+                    ?.let { f -> answerService.sendAnswerPhotoToChat(update, f) }
+                    ?: run { answerService.sendAnswerTextToChat(update, "Фото недоступно.") }
             } else {
-                answerService.sendAnswerTextToChat(update, "Неверный контекст")
+                answerService.sendAnswerTextToChat(update, "Неверный контекст.")
             }
         } else {
-            answerService.sendAnswerTextToChat(update, "Некорректная команда get ${update.message.text}. Шаблон: /get_Число")
+            answerService.sendAnswerTextToChat(update, "Некорректная команда get ${update.message.text}. Смотрите справку /help")
         }
     }
 
