@@ -13,7 +13,11 @@ hs_err_pid*
 
 # JetBrains Files
 .idea
+*.secret
 *.iml
+
+#MacOS
+.DS_Store
 
 /target/
 node/target/
@@ -21,6 +25,7 @@ dispatcher/target/
 .gradle/
 logs/
 build/
+db-data/
 !gradle/wrapper/gradle-wrapper.jar
 
 .classpath

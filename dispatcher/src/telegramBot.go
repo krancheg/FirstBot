@@ -12,6 +12,7 @@ import (
 	"pack.ag/amqp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const textMessageUpdate = "text_message_update"
@@ -22,16 +23,24 @@ const answerMessage = "answer_message"
 // https://api.telegram.org/bot<token>/METHOD_NAME
 const botApi = "https://api.telegram.org/bot"
 const environmentNameToken = "TELEGRAM_TOKEN"
+const environmentRabbitHost = "RABBITMQ_HOST"
+const environmentDurationBetweenAttempts = "DURATION_BETWEEN_ATTEMPTS_TO_RABBITMQ"
 const rabbitUser = "userok"
 const rabbitPassword = "pass@1234"
-const rabbitUrl = "amqp://localhost"
 
 func main()  {
-	var botUrl = botApi + os.Getenv(environmentNameToken)
-	client, session, err := connectToRabbit(rabbitUrl, rabbitUser, rabbitPassword)
+	var botUrl = botApi + checkToken(os.Getenv(environmentNameToken))
+	var rabbitUrl = "amqp://" + os.Getenv(environmentRabbitHost)
+	var durationBetweenAttempts = os.Getenv(environmentDurationBetweenAttempts)
+	duration, err := time.ParseDuration(durationBetweenAttempts + "s")
 	if err != nil {
 		return
 	}
+	log.Println("--======Hello======--")
+	log.Println("Dispatcher is started. Url: "+botUrl)
+
+	client, session := connectToRabbit(rabbitUrl, rabbitUser, rabbitPassword, duration)
+
 	defer disconnectFromRabbit(client)
 
 	go waitMessageFromRabbit(botUrl, session)
@@ -40,10 +49,10 @@ func main()  {
 	for {
 		updates, err := getUpdates(botUrl, offset)
 		if err != nil {
-			log.Println("Smth went wrong: ", err.Error())
+			log.Fatal("Smth went wrong: ", err.Error())
 		}
-		fmt.Println(updates)
 		for _, update := range updates {
+			fmt.Println(updates)
 			queue, err := distributeByQueues(update)
 			if err != nil {
 				err = respondBotMessage(botUrl, sendMessageBuild(update, err.Error()))
@@ -64,6 +73,17 @@ func main()  {
 			offset = update.UpdateId + 1
 		}
 	}
+}
+
+func checkToken(tokenName string) (string) {
+	if strings.HasPrefix(tokenName, "/") {
+		fileContent, err := os.ReadFile(tokenName)
+		if err != nil {
+			panic(err)
+		}
+		return string(fileContent)
+	}
+	return tokenName
 }
 
 func distributeByQueues(update Update) (string, error)  {

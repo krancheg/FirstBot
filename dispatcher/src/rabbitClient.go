@@ -10,25 +10,30 @@ import (
 	"pack.ag/amqp" // Install command:  go get -u -v pack.ag/amqp
 )
 
-func connectToRabbit(rabbitUrl, user, password string) (*amqp.Client, *amqp.Session, error) {
+func connectToRabbit(rabbitUrl, user, password string, durationBetweenAttempts time.Duration) (*amqp.Client, *amqp.Session) {
 	// Create client
-	client, err := amqp.Dial(rabbitUrl,
-		amqp.ConnSASLPlain(user, password),
-	)
-	if err != nil {
-		log.Fatal("Dialing AMQP server:", err)
-		return nil, nil, err
-	}
+	for {
+		client, err := amqp.Dial(rabbitUrl,
+			amqp.ConnSASLPlain(user, password),
+		)
+		if err != nil {
+			log.Println("Dialing AMQP server:", err)
+			log.Println("Reetry...")
+			time.Sleep(durationBetweenAttempts)
+			continue
+		}
 
-	// Open a session
-	session, err := client.NewSession()
-	if err != nil {
-		log.Fatal("Creating AMQP session:", err)
-		client.Close()
-		return nil, nil, err
+		// Open a session
+		session, err := client.NewSession()
+		if err != nil {
+			log.Println("Creating AMQP session:", err)
+			client.Close()
+			log.Println("Reetry...")
+			time.Sleep(durationBetweenAttempts)
+			continue
+		}
+		return client, session
 	}
-
-	return client, session, nil
 }
 
 func disconnectFromRabbit(client *amqp.Client) {

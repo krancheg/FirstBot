@@ -3,15 +3,15 @@ server:
 
 spring:
   rabbitmq:
-    host: localhost
+    host: ${RABBITMQ_URL:localhost}
     port: 5672
     username: userok
     password: pass@1234
 
   datasource:
     driverClassName: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/first_bot
-    username: postgres
-    password: a123456789
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/first_bot}
+    username: ${DATABASE_LOGIN:postgres}
+    password: ${DATABASE_PASSWORD:a123456789}
   jpa:
     generate-ddl: true

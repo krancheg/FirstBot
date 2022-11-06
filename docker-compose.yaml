@@ -1,0 +1,58 @@
+version: '3.4'
+
+services:
+  rabbitmq:
+    container_name: rabbitmq_tb
+    build:
+      context: .
+      dockerfile: rabbitmq.Dockerfile
+    environment:
+      - RABBITMQ_DEFAULT_USER=userok
+      - RABBITMQ_DEFAULT_PASS=pass@1234
+    ports:
+      - 5672:5672
+      - 15672:15672
+
+  postgres:
+    container_name: postgres_tb
+    image: 'postgres:13.8'
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=119827345aaa
+      - POSTGRES_DB=first_bot
+    volumes:
+      - ./db-data/:/var/lib/postgresql/data/
+
+  dispatcher:
+    container_name: dispatcher_tb
+    build:
+      context: dispatcher
+    secrets:
+      - token
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - TELEGRAM_TOKEN=/run/secrets/token
+      - DURATION_BETWEEN_ATTEMPTS_TO_RABBITMQ=5
+    depends_on:
+      - rabbitmq
+
+  node:
+    container_name: node_tb
+    build:
+      context: node
+    environment:
+      - DATABASE_URL=jdbc:postgresql://postgres:5432/first_bot
+      - DATABASE_LOGIN=postgres
+      - DATABASE_PASSWORD=119827345aaa
+      - RABBITMQ_URL=rabbitmq
+    ports:
+      - 8085:8085
+    depends_on:
+      - postgres
+      - rabbitmq
+
+secrets:
+  token:
+    file: token.secret
