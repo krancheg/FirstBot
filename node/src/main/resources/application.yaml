@@ -15,3 +15,13 @@ spring:
     password: ${DATABASE_PASSWORD:a123456789}
   jpa:
     generate-ddl: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true

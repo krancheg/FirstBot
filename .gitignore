@@ -22,6 +22,7 @@ hs_err_pid*
 /target/
 node/target/
 dispatcher/target/
+helm/dispatcher/templates/secret.yaml
 .gradle/
 logs/
 build/

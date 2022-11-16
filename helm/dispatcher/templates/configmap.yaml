@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.configMapName }}
+  namespace: {{ .Values.namespace }}
+data:
+  rabbitmq_host: "{{ .Values.env.rabbitmqHost }}"
+  duration_between_attempts_to_rabbitmq: "{{ .Values.env.durationBetweenAttemptsToRabbitmq }}"

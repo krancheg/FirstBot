@@ -1,5 +1,6 @@
 package org.homeproject.service
 
+import io.micrometer.core.annotation.Timed
 import org.homeproject.entity.RawEntity
 import org.homeproject.model.ContentType
 import org.homeproject.repository.RawRepository
@@ -14,11 +15,14 @@ class DbService(
 ) {
 
     @Retryable(maxAttempts = 3, backoff = Backoff(multiplier = 1.3, maxDelay = 5000))
+    @Timed("get_from_code")
     fun getByCode(id: Long): RawEntity {
         return repository.getById(id)
     }
 
     @Retryable(maxAttempts = 3, backoff = Backoff(multiplier = 1.3, maxDelay = 5000))
+
+    @Timed("save_to_base")
     fun saveQuery(update: Update, contentType: ContentType): Long {
         val rawEntity = RawEntity()
         rawEntity.event = update

@@ -7,7 +7,7 @@
 ### Структурная схема бота
 ![img.png](img.png)
 
-### Подготовка проекта для запуска:
+### Подготовка проекта для запуска
 
 1. Скачиваем проект https://github.com/krancheg/FirstBot.git
 2. Регистрируем новый бот в телеграм чрез https://t.me/BotFather, выполняем команду /newbot, далее следуем инструкциям. 
@@ -26,8 +26,20 @@
 2. ```docker-compose build```
 3. ```docker-compose up```
 
-### Как развернуть Kubernetes
-<i>На данный момент недоступно</i>
+### Deploy в Kubernetes
+Развертывание микросервисов осуществляется с помощью Helm.
+Перед началом необходимо создать файл `helm/dispatcher/templates/secret.yaml` 
+с содержимым:
+```
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Values.secretName }}
+  namespace: {{ .Values.namespace }}
+type: Opaque
+stringData:
+  telegramToken: <access token>
+```
 
 ### Как использовать
 На данный момент доступны команды:

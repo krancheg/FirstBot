@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.configMapName }}
+  namespace: {{ .Values.namespace }}
+data:
+  rabbitmq_url: "{{ .Values.env.rabbitmqUrl }}"
+  database_url: "{{ .Values.env.databaseUrl }}"
+  database_login: "{{ .Values.env.databaseLogin }}"
+  database_password: "{{ .Values.env.databasePassword }}"
